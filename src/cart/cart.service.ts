@@ -1,86 +1,98 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cart } from './cart.entity';
-import { CartItem } from './cart-item.entity';
+import { Cart } from './entities/cart.entity';
+import { CartItem } from './entities/cart-item.entity';
+import { Order } from './entities/order.entity'; // Import the Order entity
 
 @Injectable()
 export class CartService {
     constructor(
         @InjectRepository(Cart)
-        private cartRepository: Repository<Cart>,
+        private cartRepository: Repository<Cart>, // Repository for Cart entity
         @InjectRepository(CartItem)
-        private cartItemRepository: Repository<CartItem>,
+        private cartItemRepository: Repository<CartItem>, // Repository for CartItem entity
+        @InjectRepository(Order) // Inject the Order repository
+        private orderRepository: Repository<Order>, // Repository for Order entity
     ) {}
 
     // Retrieve or create the single cart
     async getCart(): Promise<Cart> {
-      const cart = await this.cartRepository.findOne({
-          where: {},  // Add selection criteria here if necessary
-          relations: ['items'],
-      });
-  
-      if (!cart) {
-          const newCart = this.cartRepository.create(); // Create a new cart
-          return await this.cartRepository.save(newCart); // Save and return the new cart
-      }
-      
-      return cart; // Return the existing cart
+        const cart = await this.cartRepository.findOne({
+            where: {},  // Add selection criteria here if necessary
+            relations: ['items'], // Include related items
+        });
+
+        if (!cart) {
+            const newCart = this.cartRepository.create(); // Create a new cart if none exists
+            return await this.cartRepository.save(newCart); // Save and return the new cart
+        }
+        
+        return cart; // Return the existing cart
     }
 
     // Add or update an item in the cart
     async addItemToCart(item: CartItem): Promise<Cart> {
-        const cart = await this.getCart();
-        const existingItem = cart.items.find(cartItem => cartItem.name === item.name);
+        const cart = await this.getCart(); // Retrieve the current cart
+        const existingItem = cart.items.find(cartItem => cartItem.name === item.name); // Check for existing item
 
         if (existingItem) {
-            existingItem.quantity += item.quantity; // Update quantity
+            existingItem.quantity += item.quantity; // Update quantity if item already exists
             await this.cartItemRepository.save(existingItem); // Save updated item
         } else {
-            const newItem = this.cartItemRepository.create(item);
+            const newItem = this.cartItemRepository.create(item); // Create new item
             newItem.cart = cart; // Associate with the cart
-            cart.items.push(newItem);
+            cart.items.push(newItem); // Add new item to the cart's items array
             await this.cartItemRepository.save(newItem); // Save new item
         }
 
-        return await this.cartRepository.save(cart); // Save the updated cart
+        return await this.cartRepository.save(cart); // Save and return the updated cart
     }
 
     // Remove an item from the cart by item ID
     async removeItemFromCart(itemId: number): Promise<Cart> {
         const itemToRemove = await this.cartItemRepository.findOne({
             where: { id: itemId },
-            relations: ['cart'],
+            relations: ['cart'], // Load the cart relationship
         });
 
         if (!itemToRemove) {
-            throw new NotFoundException('Item not found in cart');
+            throw new NotFoundException('Item not found in cart'); // Handle case where item doesn't exist
         }
 
-        const cart = itemToRemove.cart;
-        cart.items = cart.items.filter(item => item.id !== itemId);
+        const cart = itemToRemove.cart; // Get the associated cart
+        cart.items = cart.items.filter(item => item.id !== itemId); // Remove item from cart's items array
         
-        await this.cartItemRepository.remove(itemToRemove);
-        return await this.cartRepository.save(cart); // Save the updated cart
+        await this.cartItemRepository.remove(itemToRemove); // Remove item from the repository
+        return await this.cartRepository.save(cart); // Save and return the updated cart
     }
 
-    // Confirm the order (this is a placeholder for actual order confirmation logic)
+    // Confirm the order and save it to the database
     async confirmOrder(): Promise<void> {
-        const cart = await this.getCart();
+        const cart = await this.getCart(); // Retrieve the current cart
 
         // Check if the cart is empty
         if (cart.items.length === 0) {
-            throw new NotFoundException('Cart is empty. Cannot confirm an empty order.');
+            throw new NotFoundException('Cart is empty. Cannot confirm an empty order.'); // Handle empty cart case
         }
 
-        // Placeholder for confirmation logic (e.g., saving to order database)
-        console.log('Order confirmed:', cart);
+        // Create a new order based on the current cart
+        const newOrder = this.orderRepository.create({
+            // Since we removed price, totalAmount could be set to a default value or left out
+            items: cart.items, // Assign cart items to the order
+            createdAt: new Date(), // Set the current timestamp
+        });
 
-        // Optionally, clear the cart after confirmation
+        // Save the new order to the database
+        await this.orderRepository.save(newOrder);
+        console.log('Order confirmed and saved:', newOrder); // Log the confirmed order
+
+        // Clear the cart after confirmation
         await this.cartRepository.remove(cart); // This will remove the existing cart
         await this.cartRepository.save(new Cart()); // Save a new empty cart
     }
-}
+} 
+
 //CLEAR YOUR JOTTINGS BELOW
 
 

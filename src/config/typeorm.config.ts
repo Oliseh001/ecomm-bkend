@@ -1,6 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Cart } from '../cart/cart.entity'; // Adjust the path
-import { CartItem } from '../cart/cart-item.entity'
+import { Cart } from '../cart/entities/cart.entity'; // Adjust the path
+import { CartItem } from '../cart/entities/cart-item.entity'
+import { Order } from 'src/cart/entities/order.entity';
 
  export const typeOrmConfig: TypeOrmModuleOptions = {
     type: 'postgres',
@@ -9,7 +10,7 @@ import { CartItem } from '../cart/cart-item.entity'
     username: 'postgres',
     password: 'postgres',
     database: 'cart-db',
-    entities: [Cart,CartItem],  // any file or folder within src folder ending with .entity.ts
+    entities: [Cart, CartItem, Order],  // any file or folder within src folder ending with .entity.ts
     synchronize: true, // check why false is recommended 
     logging: true,
     };

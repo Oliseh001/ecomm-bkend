@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartController } from './cart.controller';
-import { Cart } from './cart.entity'; // Make sure to import the Cart entity
-import { CartItem } from './cart-item.entity'; // Make sure to import the CartItem entity
+import { Cart } from './entities/cart.entity';
+import { CartItem } from './entities/cart-item.entity'; 
 import { CartService } from './cart.service';
 import { CartRepository, CartItemRepository } from './cart.repository';
+import { Order } from './entities/order.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Cart, CartItem]), // Register the entities
+        TypeOrmModule.forFeature([Cart, CartItem, Order]), // Register the entities
     ],
     controllers: [CartController],
     providers: [CartService, CartRepository, CartItemRepository], // Register the repositories as providers
