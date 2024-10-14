@@ -1,17 +1,17 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Cart } from './cart.entity'; // Import Cart after defining CartItem
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Cart } from './cart.entity';
 
 @Entity()
 export class CartItem {
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-  @Column()
-  name: string;
+    @Column()
+    name: string;
 
-  @Column()
-  quantity: number;
+    @Column()
+    quantity: number;
 
-  @ManyToOne(() => Cart, (cart) => cart.items)
-  cart: Cart;
+    @ManyToOne(() => Cart, (cart) => cart.items)
+    cart: Cart;
 }

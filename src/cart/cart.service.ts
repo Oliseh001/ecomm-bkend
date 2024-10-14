@@ -6,98 +6,80 @@ import { CartItem } from './cart-item.entity';
 
 @Injectable()
 export class CartService {
-  constructor(
-    @InjectRepository(Cart)
-    private cartRepository: Repository<Cart>,
-    @InjectRepository(CartItem)
-    private cartItemRepository: Repository<CartItem>,
-  ) {}
+    constructor(
+        @InjectRepository(Cart)
+        private cartRepository: Repository<Cart>,
+        @InjectRepository(CartItem)
+        private cartItemRepository: Repository<CartItem>,
+    ) {}
 
-  // Retrieve a cart by ID or create a new one if none exists
-  async getCart(id: number): Promise<Cart | { message: string }> {
-    let cart = await this.cartRepository.findOne({
-      where: { id },
-      relations: ['items'], // Load cart items
-    });
-
-    // Create a new cart if it does not exist
-    if (!cart) {
-      cart = new Cart();
-      await this.cartRepository.save(cart);
-      return cart; // Return newly created cart
+    // Retrieve or create the single cart
+    async getCart(): Promise<Cart> {
+      const cart = await this.cartRepository.findOne({
+          where: {},  // Add selection criteria here if necessary
+          relations: ['items'],
+      });
+  
+      if (!cart) {
+          const newCart = this.cartRepository.create(); // Create a new cart
+          return await this.cartRepository.save(newCart); // Save and return the new cart
+      }
+      
+      return cart; // Return the existing cart
     }
 
-    return cart; // Return existing cart
-  }
+    // Add or update an item in the cart
+    async addItemToCart(item: CartItem): Promise<Cart> {
+        const cart = await this.getCart();
+        const existingItem = cart.items.find(cartItem => cartItem.name === item.name);
 
-  // Get all carts
-  async getAllCarts(): Promise<Cart[]> {
-    return this.cartRepository.find({ relations: ['items'] }); // Fetch all carts with their items
-  }
+        if (existingItem) {
+            existingItem.quantity += item.quantity; // Update quantity
+            await this.cartItemRepository.save(existingItem); // Save updated item
+        } else {
+            const newItem = this.cartItemRepository.create(item);
+            newItem.cart = cart; // Associate with the cart
+            cart.items.push(newItem);
+            await this.cartItemRepository.save(newItem); // Save new item
+        }
 
-  // Add an item to the cart
-  async addItemToCart(item: CartItem): Promise<void> {
-    const cartResponse = await this.getCart(item.cart.id); // Get the cart to add item to
-
-    // Check if the cart exists
-    if (!cartResponse) {
-      throw new NotFoundException('Cart not found');
+        return await this.cartRepository.save(cart); // Save the updated cart
     }
 
-    const cart = cartResponse as Cart;
+    // Remove an item from the cart by item ID
+    async removeItemFromCart(itemId: number): Promise<Cart> {
+        const itemToRemove = await this.cartItemRepository.findOne({
+            where: { id: itemId },
+            relations: ['cart'],
+        });
 
-    // Check if the item already exists in the cart
-    const existingItem = cart.items.find((cartItem) => cartItem.name === item.name);
-    if (existingItem) {
-      existingItem.quantity += item.quantity; // Update quantity
-      await this.cartItemRepository.save(existingItem); // Save updated item
-    } else {
-      // Add new item to the cart
-      const newItem = this.cartItemRepository.create(item);
-      newItem.cart = cart; // Associate the item with the cart
-      cart.items.push(newItem);
-      await this.cartItemRepository.save(newItem); // Save new item
+        if (!itemToRemove) {
+            throw new NotFoundException('Item not found in cart');
+        }
+
+        const cart = itemToRemove.cart;
+        cart.items = cart.items.filter(item => item.id !== itemId);
+        
+        await this.cartItemRepository.remove(itemToRemove);
+        return await this.cartRepository.save(cart); // Save the updated cart
     }
 
-    await this.cartRepository.save(cart); // Save the updated cart
-  }
+    // Confirm the order (this is a placeholder for actual order confirmation logic)
+    async confirmOrder(): Promise<void> {
+        const cart = await this.getCart();
 
-  // Remove an item from the cart by item ID
-  async removeItemFromCart(itemId: number): Promise<void> {
-    const itemToRemove = await this.cartItemRepository.findOne({
-      where: { id: itemId },
-      relations: ['cart'],
-    });
+        // Check if the cart is empty
+        if (cart.items.length === 0) {
+            throw new NotFoundException('Cart is empty. Cannot confirm an empty order.');
+        }
 
-    if (!itemToRemove) {
-      throw new NotFoundException('Item not found in cart');
+        // Placeholder for confirmation logic (e.g., saving to order database)
+        console.log('Order confirmed:', cart);
+
+        // Optionally, clear the cart after confirmation
+        await this.cartRepository.remove(cart); // This will remove the existing cart
+        await this.cartRepository.save(new Cart()); // Save a new empty cart
     }
-
-    // Remove the item from the cart
-    const cart = itemToRemove.cart;
-    cart.items = cart.items.filter(item => item.id !== itemId);
-
-    await this.cartItemRepository.remove(itemToRemove); // Remove item from the database
-    await this.cartRepository.save(cart); // Save the updated cart
-  }
-
-  // Confirm the order (this is a placeholder for actual order confirmation logic)
-  async confirmOrder(): Promise<void> {
-    const cartResponse = await this.getAllCarts(); // Get all carts or specify which one
-
-    // Check if the cart is empty or doesn't exist
-    if (!cartResponse.length || (cartResponse[0].items.length === 0)) {
-      throw new NotFoundException('Cart is empty. Cannot confirm an empty order.');
-    }
-
-    const cart = cartResponse[0]; // For simplicity, using the first cart
-
-    // Placeholder for confirmation logic (e.g., saving to order database)
-    console.log('Order confirmed:', cart);
-
-    // Clear the cart (optional)
-    await this.cartRepository.save(new Cart()); // Save an empty cart to clear existing items
-  }
 }
 //CLEAR YOUR JOTTINGS BELOW
 
