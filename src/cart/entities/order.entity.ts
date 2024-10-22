@@ -1,14 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, OneToMany, Column } from 'typeorm';
-import { CartItem } from './cart-item.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity() // Decorator that marks this class as a database entity
+@Entity()
 export class Order {
-    @PrimaryGeneratedColumn() // Automatically generated unique identifier for the order
+    @PrimaryGeneratedColumn()
     id: number;
 
-    @OneToMany(() => CartItem, (item) => item.cart, { cascade: true }) // Relationship with CartItem
-    items: CartItem[]; // Array of items included in the order
+    @Column('json') // Ensure this is a JSON column for storing an array of items
+    items: { name: string; quantity: number }[];
 
-    @Column() // Column for the creation date of the order
-    createdAt: Date; // Timestamp for when the order was created
+    @Column()
+    createdAt: Date;
 }
