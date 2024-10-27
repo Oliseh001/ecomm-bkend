@@ -50,39 +50,30 @@ export class CartService {
     }
 
     // Remove an item from the cart by item ID
+    // Remove an item from the cart by item ID
     async removeItemFromCart(itemId: number): Promise<Cart> {
-        // Find the cart item with the specified ID
         const itemToRemove = await this.cartItemRepository.findOne({
             where: { id: itemId },
             relations: ['cart'], // Load the cart relationship
         });
 
-        // If item doesn't exist, log a warning instead of throwing an error
         if (!itemToRemove) {
-            console.warn(`Item with ID ${itemId} not found in cart. No action taken.`);
-            return await this.getCart(); // Return the current cart without changes
+            throw new NotFoundException(`Item with ID ${itemId} not found in cart.`);
         }
 
         const cart = itemToRemove.cart; // Get the associated cart
 
-        // Find the item index in the cart's items array
-        const itemIndex = cart.items.findIndex(item => item.id === itemId);
+        // Reduce the quantity of the item
+        itemToRemove.quantity -= 1;
 
-        if (itemIndex >= 0) {
-            // Reduce the quantity of the item
-            cart.items[itemIndex].quantity -= 1;
-
-            // If quantity is less than 1, remove the item from the cart and database
-            if (cart.items[itemIndex].quantity < 1) {
-                // Remove item from the cart's items array
-                cart.items.splice(itemIndex, 1); // Remove from cart's items array
-                await this.cartItemRepository.remove(itemToRemove); // Remove from the repository
-                console.log(`Item with ID ${itemId} removed from cart and database.`);
-            } else {
-                // Otherwise, just save the updated item quantity
-                await this.cartItemRepository.save(cart.items[itemIndex]); // Save updated item
-                console.log(`Item with ID ${itemId} quantity reduced. New quantity: ${cart.items[itemIndex].quantity}`);
-            }
+        if (itemToRemove.quantity < 1) {
+            // If quantity is less than 1, remove item from the cart and database
+            await this.cartItemRepository.remove(itemToRemove); // Remove from the repository
+            console.log(`Item with ID ${itemId} removed from cart and database.`);
+        } else {
+            // Otherwise, just save the updated item quantity
+            await this.cartItemRepository.save(itemToRemove); // Save updated item
+            console.log(`Item with ID ${itemId} quantity reduced. New quantity: ${itemToRemove.quantity}`);
         }
 
         return await this.cartRepository.save(cart); // Save and return the updated cart
