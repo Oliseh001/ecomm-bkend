@@ -7,6 +7,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from './user.entity'; // Ensure correct path
+import * as config from 'config'
+
+const jwtConfig =  config.get('jwt')
 
 @Module({
   imports: [
@@ -14,8 +17,8 @@ import { User } from './user.entity'; // Ensure correct path
     TypeOrmModule.forFeature([User, UserRepository]), 
     PassportModule.register({ defaultStrategy: 'jwt' }), // Configuring Passport with JWT strategy
     JwtModule.register({
-      secret: 'Vicmanchi01@', // Use environment variable in production
-      signOptions: { expiresIn: 3600 }, // Token expiration time
+      secret: process.env.JWT_SECRET || jwtConfig.secret,// Use environment variable in production
+      signOptions: { expiresIn: jwtConfig.expiresIn }, // Token expiration time
     }),
   ],
   controllers: [AuthController],
