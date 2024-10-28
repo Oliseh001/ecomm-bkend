@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { CartItem } from './entities/cart-item.entity';
 import { Order } from './entities/order.entity'; // Import the Order entity
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class CartService {
@@ -33,23 +34,25 @@ export class CartService {
 
     // Add or update an item in the cart
     async addItemToCart(item: CartItem): Promise<Cart> {
-        const cart = await this.getCart(); // Retrieve the current cart
-        const existingItem = cart.items.find(cartItem => cartItem.name === item.name); // Check for existing item
+        const cart = await this.getCart(); 
+        const existingItem = cart.items.find(cartItem => cartItem.name === item.name); 
 
         if (existingItem) {
-            existingItem.quantity += item.quantity; // Update quantity if item already exists
-            await this.cartItemRepository.save(existingItem); // Save updated item
+            existingItem.quantity += item.quantity; 
+            await this.cartRepository.save(cart); // Save the cart, cascading the save of CartItem
         } else {
-            const newItem = this.cartItemRepository.create(item); // Create new item
-            newItem.cart = cart; // Associate with the cart
-            cart.items.push(newItem); // Add new item to the cart's items array
-            await this.cartItemRepository.save(newItem); // Save new item
+            const newItem = new CartItem(); // Create new item
+            newItem.name = item.name;
+            newItem.quantity = item.quantity;
+            newItem.cart = cart; 
+            cart.items.push(newItem);
+            await this.cartRepository.save(cart); // Save the cart, cascading the save of CartItem
         }
 
-        return await this.cartRepository.save(cart); // Save and return the updated cart
+        return cart; 
     }
 
-    // Remove an item from the cart by item ID
+    
     // Remove an item from the cart by item ID
     async removeItemFromCart(itemId: number): Promise<Cart> {
         const itemToRemove = await this.cartItemRepository.findOne({
@@ -79,8 +82,8 @@ export class CartService {
         return await this.cartRepository.save(cart); // Save and return the updated cart
     }
 
-    // Confirm the order and clear the cart
-    async confirmOrder(): Promise<void> {
+ // Confirm the order and clear the cart
+ async confirmOrder(user: User): Promise<void> { // Accept user as parameter
     const cart = await this.getCart(); // Ensure this function fetches the cart correctly
 
     // Check if cart is found
@@ -104,10 +107,11 @@ export class CartService {
         quantity: item.quantity,
     }));
 
-    // Create and save the new order
+    // Create and save the new order with confirmedBy user
     const newOrder = this.orderRepository.create({
         items: itemsToSave,
         createdAt: new Date(),
+        confirmedBy: user, // Assign the user who confirmed the order
     });
 
     await this.orderRepository.save(newOrder);

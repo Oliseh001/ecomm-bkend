@@ -23,7 +23,4 @@ export class CartItemRepository {
         private cartItemRepository: Repository<CartItem>, // Inject CartItem repository
     ) {}
 }
-/*@EntityRepository(ConfirmOrder)
-export class ConfirmOrderRepository extends Repository<ConfirmOrder> {
-  // You can define custom repository methods here
-}*/
+

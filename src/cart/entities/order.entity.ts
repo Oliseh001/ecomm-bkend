@@ -1,3 +1,5 @@
+// order.entity.ts
+
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from '../../auth/user.entity';
 
@@ -13,5 +15,8 @@ export class Order {
     createdAt: Date;
 
     @ManyToOne(() => User, user => user.orders) // Relationship to User
-    user: User;
+    user: User; // Reference to the user who placed the order
+
+    @ManyToOne(() => User) // Relationship to User who confirmed the order
+    confirmedBy: User; // Reference to the user who confirmed the order
 }

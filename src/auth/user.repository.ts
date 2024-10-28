@@ -70,6 +70,11 @@ import {
     async findUserByEmail(email: string): Promise<User | null> {
       return this.userRepository.findOne({ where: { email } });
     }
+    async findUsersWithOrders(): Promise<User[]> {
+    return await this.userRepository.find({
+        relations: ['orders'], // Load user orders
+    });
+}
   
     /**
      * Hash the user's password
