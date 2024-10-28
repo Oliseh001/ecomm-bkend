@@ -10,15 +10,23 @@ import { User } from './user.entity'; // Ensure correct path
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserRepository]), // Register User and UserRepository
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    // Registering the User entity and UserRepository to allow TypeORM to manage them
+    TypeOrmModule.forFeature([User, UserRepository]), 
+    PassportModule.register({ defaultStrategy: 'jwt' }), // Configuring Passport with JWT strategy
     JwtModule.register({
-      secret: 'Vicmanchi01@',
-      signOptions: { expiresIn: 3600 },
+      secret: 'Vicmanchi01@', // Use environment variable in production
+      signOptions: { expiresIn: 3600 }, // Token expiration time
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserRepository, JwtStrategy], // UserRepository is not needed here; it’s injected directly into AuthService
-  exports: [JwtStrategy, PassportModule],
+  providers: [
+    AuthService, // AuthService handles the logic for authentication
+    JwtStrategy,  // JwtStrategy is responsible for validating JWTs
+    UserRepository, // This can stay if you inject it into other providers like AuthService
+  ],
+  exports: [
+    JwtStrategy, // Export JwtStrategy for use in other modules
+    PassportModule, // Export PassportModule to enable guards in other modules
+  ],
 })
 export class AuthModule {}

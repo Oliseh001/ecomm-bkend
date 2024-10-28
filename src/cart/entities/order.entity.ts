@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { User } from '../../auth/user.entity';
 
 @Entity()
 export class Order {
@@ -10,4 +11,7 @@ export class Order {
 
     @Column()
     createdAt: Date;
+
+    @ManyToOne(() => User, user => user.orders) // Relationship to User
+    user: User;
 }
