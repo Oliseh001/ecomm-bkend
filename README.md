@@ -26,60 +26,128 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+# E-Commerce Cart Functionality
 
-```bash
-$ npm install
-```
+## Overview
 
-## Compile and run the project
+This application provides a comprehensive cart functionality for an e-commerce platform, allowing users to sign in, sign up, manage their cart, and confirm orders. The backend is hosted at [https://ecomm-bkend-1.onrender.com](https://ecomm-bkend-1.onrender.com).
 
-```bash
-# development
-$ npm run start
+## Features
 
-# watch mode
-$ npm run start:dev
+- **User Authentication**:
+  - **Sign Up**: Users can create an account.
+  - **Sign In**: Users can log into their account.
 
-# production mode
-$ npm run start:prod
-```
+- **Cart Management**:
+  - **Add Items to Cart**: Users can add items to their cart.
+  - **Remove Items from Cart**: Users can remove specific items from their cart.
+  - **View Cart**: Users can retrieve and view their current cart contents.
+  - **Clear Cart**: (Optional) Functionality to clear the entire cart can be added.
 
-## Run tests
+- **Order Confirmation**:
+  - **Confirm Orders**: Users can confirm their cart as an order after ensuring everything is in order.
 
-```bash
-# unit tests
-$ npm run test
+## API Endpoints
 
-# e2e tests
-$ npm run test:e2e
+### Authentication Endpoints
 
-# test coverage
-$ npm run test:cov
-```
+- **Sign Up**
+  - **Endpoint**: `POST /auth/signup`
+  - **Request Body**:
+    ```json
+    {
+      "username": "string",
+      "password": "string"
+    }
+    ```
+  - **Response**: 
+    - Status: `201 Created`
+    - Body: `{"message": "User registered successfully."}`
+  - **URL**: [https://ecomm-bkend-1.onrender.com/auth/signup](https://ecomm-bkend-1.onrender.com/auth/signup)
 
-## Resources
+- **Sign In**
+  - **Endpoint**: `POST /auth/signin`
+  - **Request Body**:
+    ```json
+    {
+      "username": "string",
+      "password": "string"
+    }
+    ```
+  - **Response**: 
+    - Status: `200 OK`
+    - Body: `{"accessToken": "string"}`
+  - **URL**: [https://ecomm-bkend-1.onrender.com/auth/signin](https://ecomm-bkend-1.onrender.com/auth/signin)
 
-Check out a few resources that may come in handy when working with NestJS:
+### Cart Endpoints
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Get Cart**
+  - **Endpoint**: `GET /cart`
+  - **Response**: 
+    - Status: `200 OK`
+    - Body: 
+    ```json
+    {
+      "message": "Cart retrieved successfully.",
+      "cart": {
+        // Cart object structure
+      }
+    }
+    ```
+  - **URL**: [https://ecomm-bkend-1.onrender.com/cart](https://ecomm-bkend-1.onrender.com/cart)
 
-## Support
+- **Add Item to Cart**
+  - **Endpoint**: `POST /cart/add-item`
+  - **Request Body**:
+    ```json
+    {
+      "itemId": "number",
+      "quantity": "number"
+    }
+    ```
+  - **Response**: 
+    - Status: `200 OK`
+    - Body: 
+    ```json
+    {
+      "message": "Item added to cart successfully.",
+      "cart": {
+        // Updated cart object structure
+      }
+    }
+    ```
+  - **URL**: [https://ecomm-bkend-1.onrender.com/cart/add-item](https://ecomm-bkend-1.onrender.com/cart/add-item)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **Remove Item from Cart**
+  - **Endpoint**: `DELETE /cart/remove-item/:id`
+  - **Response**: 
+    - Status: `200 OK`
+    - Body: 
+    ```json
+    {
+      "message": "Item removed from cart successfully.",
+      "cart": {
+        // Updated cart object structure
+      }
+    }
+    ```
+  - **URL**: [https://ecomm-bkend-1.onrender.com/cart/remove-item/:id](https://ecomm-bkend-1.onrender.com/cart/remove-item/:id)
 
-## Stay in touch
+- **Confirm Order**
+  - **Endpoint**: `POST /cart/confirm`
+  - **Authentication**: Requires JWT token in headers.
+  - **Response**: 
+    - Status: `200 OK`
+    - Body: 
+    ```json
+    {
+      "message": "Order confirmed successfully."
+    }
+    ```
+  - **URL**: [https://ecomm-bkend-1.onrender.com/cart/confirm](https://ecomm-bkend-1.onrender.com/cart/confirm)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Getting Started
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/ecommerce-cart.git and test in postman collection
