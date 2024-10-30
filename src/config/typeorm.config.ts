@@ -1,22 +1,24 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Cart } from '../cart/entities/cart.entity'; // Adjust the path
-import { CartItem } from '../cart/entities/cart-item.entity'
+import { Cart } from '../cart/entities/cart.entity';
+import { CartItem } from '../cart/entities/cart-item.entity';
 import { Order } from 'src/cart/entities/order.entity';
 import { User } from 'src/auth/user.entity';
-import * as config from 'config'
+import * as dotenv from 'dotenv';
 
-const dbConfig = config.get('db');
+dotenv.config(); // Load environment variables
 
-
- export const typeOrmConfig: TypeOrmModuleOptions = {
-    type: dbConfig.type,
-    host: process.env.RDS_HOSTNAME || dbConfig.host,
-    port: process.env.RDS_PORT || dbConfig.port,
-    username: process.env.RDS_USERNAME ||dbConfig.password,
-    password: process.env.RDS_PASSWORD || dbConfig.password,
-    database: process.env.RDS_DB_NAME || dbConfig.database,
-    entities: [Cart, CartItem, Order, User],  // any file or folder within src folder ending with .entity.ts
-    synchronize: process.env.TYPEORM_SYNC || dbConfig.synchronize,
+export const typeOrmConfig: TypeOrmModuleOptions = {
+    type: 'postgres',
+    host: process.env.RDS_HOSTNAME,
+    port: parseInt(process.env.RDS_PORT, 10),
+    username: process.env.RDS_USERNAME,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DB_NAME,
+    entities: [Cart, CartItem, Order, User],
+    synchronize: process.env.TYPEORM_SYNC === 'false',
     logging: false,
-    };
+    ssl: {
+        rejectUnauthorized: true, // This is important for self-signed certificates. Set to true for production.
+    },
+};
 

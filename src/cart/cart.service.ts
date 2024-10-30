@@ -33,101 +33,104 @@ export class CartService {
     }
 
     // Add or update an item in the cart
-    async addItemToCart(item: CartItem): Promise<Cart> {
+    async addItemToCart(item: CartItem): Promise<{ message: string; cart: Cart }> {
         const cart = await this.getCart(); 
         const existingItem = cart.items.find(cartItem => cartItem.name === item.name); 
-
+    
         if (existingItem) {
             existingItem.quantity += item.quantity; 
-            await this.cartRepository.save(cart); // Save the cart, cascading the save of CartItem
+            await this.cartRepository.save(cart); 
+            console.log(`Updated item ${existingItem.name} quantity to ${existingItem.quantity}.`);
+            return { message: `Updated ${existingItem.name} in the cart.`, cart }; 
         } else {
-            const newItem = new CartItem(); // Create new item
+            const newItem = new CartItem(); 
             newItem.name = item.name;
             newItem.quantity = item.quantity;
             newItem.cart = cart; 
             cart.items.push(newItem);
-            await this.cartRepository.save(cart); // Save the cart, cascading the save of CartItem
+            await this.cartRepository.save(cart); 
+            console.log(`Added new item ${newItem.name} to the cart.`);
+            return { message: `Added ${newItem.name} to the cart.`, cart }; 
         }
-
-        return cart; 
     }
+    
 
     
     // Remove an item from the cart by item ID
-    async removeItemFromCart(itemId: number): Promise<Cart> {
+    async removeItemFromCart(itemId: number): Promise<{ message: string; cart: Cart }> {
         const itemToRemove = await this.cartItemRepository.findOne({
             where: { id: itemId },
-            relations: ['cart'], // Load the cart relationship
+            relations: ['cart'], 
         });
-
+    
         if (!itemToRemove) {
             throw new NotFoundException(`Item with ID ${itemId} not found in cart.`);
         }
-
-        const cart = itemToRemove.cart; // Get the associated cart
-
-        // Reduce the quantity of the item
+    
+        const cart = itemToRemove.cart; 
+    
         itemToRemove.quantity -= 1;
-
+    
         if (itemToRemove.quantity < 1) {
-            // If quantity is less than 1, remove item from the cart and database
-            await this.cartItemRepository.remove(itemToRemove); // Remove from the repository
+            await this.cartItemRepository.remove(itemToRemove); 
             console.log(`Item with ID ${itemId} removed from cart and database.`);
+            return { message: `Item with ID ${itemId} removed from cart.`, cart };
         } else {
-            // Otherwise, just save the updated item quantity
-            await this.cartItemRepository.save(itemToRemove); // Save updated item
+            await this.cartItemRepository.save(itemToRemove); 
             console.log(`Item with ID ${itemId} quantity reduced. New quantity: ${itemToRemove.quantity}`);
+            return { message: `Item quantity for ID ${itemId} reduced.`, cart };
         }
-
-        return await this.cartRepository.save(cart); // Save and return the updated cart
     }
 
- // Confirm the order and clear the cart
- async confirmOrder(user: User): Promise<void> { // Accept user as parameter
-    const cart = await this.getCart(); // Ensure this function fetches the cart correctly
+    
 
-    // Check if cart is found
+ // Confirm the order and clear the cart
+ async confirmOrder(user: User): Promise<{ message: string }> { 
+    const cart = await this.getCart(); 
+
     if (!cart) {
         throw new NotFoundException('Cart not found.');
     }
 
-    // Ensure items property is defined and is an array
     if (!cart.items || !Array.isArray(cart.items)) {
         throw new BadRequestException('Cart items are not initialized properly.');
     }
 
-    // Check if the cart is empty
     if (cart.items.length === 0) {
         throw new BadRequestException('Cart is empty. Cannot confirm an empty order.');
     }
 
-    // Prepare items to save as an order
     const itemsToSave = cart.items.map(item => ({
         name: item.name,
         quantity: item.quantity,
     }));
 
-    // Create and save the new order with confirmedBy user
     const newOrder = this.orderRepository.create({
         items: itemsToSave,
         createdAt: new Date(),
-        confirmedBy: user, // Assign the user who confirmed the order
+        confirmedBy: user,
     });
 
     await this.orderRepository.save(newOrder);
+
+    // Create a detailed message for the response
+    const itemsSummary = itemsToSave.map(item => `${item.quantity} x ${item.name}`).join(', ');
+    const confirmationMessage = `Order confirmed successfully. You have ordered: ${itemsSummary}. Cart cleared.`;
 
     console.log(`Order ID: ${newOrder.id} has been confirmed with the following items:`);
     itemsToSave.forEach(item => {
         console.log(`- ${item.name}: ${item.quantity}`);
     });
 
-    // Delete all items associated with the cart before deleting the cart itself
     if (cart.items.length > 0) {
-        await this.cartItemRepository.remove(cart.items); // Remove all cart items first
+        await this.cartItemRepository.remove(cart.items);
     }
 
-    await this.cartRepository.remove(cart); // Now remove the cart
+    await this.cartRepository.remove(cart); 
 
     console.log('Cart cleared after order confirmation.');
+
+    return { message: confirmationMessage }; // Return message to the controller
 }
+
 }
