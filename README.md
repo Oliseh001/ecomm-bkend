@@ -24,8 +24,6 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
 # E-Commerce Cart Functionality
 
 ## Overview
@@ -150,4 +148,4 @@ This application provides a comprehensive cart functionality for an e-commerce p
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/ecommerce-cart.git and test in postman collection
+   git clone https://github.com/yourusername/ecommerce-cart.git
