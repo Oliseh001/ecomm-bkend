@@ -28,7 +28,7 @@
 
 ## Overview
 
-This application provides a comprehensive cart functionality for an e-commerce platform, allowing users to sign in, sign up, manage their cart, and confirm orders. The backend is hosted at [https://ecomm-bkend-1.onrender.com](https://ecomm-bkend-1.onrender.com).
+This application provides a comprehensive cart functionality for an e-commerce platform, allowing users to sign in, sign up, manage their cart, and confirm orders. The backend is hosted at [https://ecomm-bkend-1.onrender.com](https://ecomm-bkend-1.onrender.com) and a description link is added below each request which can be tested on postman.
 
 ## Features
 
